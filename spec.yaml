@@ -1,0 +1,234 @@
+openapi: 3.0.0
+info:
+  version: 1.0.0
+  title: Restaurant-Deliveries
+servers:
+  - url: 'http://localhost:3000'
+paths:
+  /checkouts:
+    post:
+      summary: 'Performs A Checkout: An endpoint to perform checkout for the selected menu items'
+      operationId: performCheckout
+      tags:
+        - Checkouts
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CheckoutBody'
+      responses:
+        '200':
+          description: 'Checkout Successful Response: response to return when checkout is successful'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Order'
+  /menus:
+    get:
+      summary: 'Retrieve All Menus: An endpoint to retrieve all menus'
+      operationId: getAllMenus
+      tags:
+        - Menus
+      responses:
+        '200':
+          description: 'Menus Retrieval Response: all menus details grouped under categories'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RestaurantMenu'
+        default:
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+            
+  /shippingcalc:
+    get:
+      summary: 'Simple shipping cost calculator: calculate shipping price of items from std tariffs'
+      operationId: calculateShippingPrice
+      tags:
+        - Shipping
+      parameters:
+        - name: toPlaceId
+          in: query
+          description: The destined location of our shipping
+          required: true
+          schema:
+            type: integer
+            format: int32
+      responses:
+        '200':
+          description: 'Shipping cost response: Shipping cost details'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ShippingCost'
+              example:
+                fromPlace: Masaki
+                toPlace: Sinza Madukani
+                cost:
+                  value: 7000.00
+                  currency: TZS
+        default:
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+components:
+  schemas:
+    Order:
+      type: object
+      properties:
+        required:
+          - id
+          - contacts
+        id:
+          type: integer
+          format: int32
+        checkoutDetails:
+          schama:
+            $ref: '#/components/schemas/CheckoutBody'
+        delivered:
+          type: boolean
+        contancts:
+          type: object
+          properties:
+            courierName:
+              type: string
+            courierPhone:
+              type: string
+            officePhone:
+              type: string
+    CheckoutBody:
+      type: object
+      properties:
+        cost:
+          type: object
+          properties:
+            orderCost:
+              type: object
+              properties:
+                value:
+                  type: string
+                currency:
+                  type: string
+            shippingCost:
+              type: object
+              properties:
+                value:
+                  type: string
+                currency:
+                  type: string
+            grantTotal:
+              type: object
+              properties:
+                value:
+                  type: string
+                currency: string
+        order:
+          type: array
+          items:
+            type: object
+            properties:
+              itemId:
+                type: integer
+                format: int32
+              qty:
+                type: integer
+                format: int32
+              subtotal:
+                type: object
+                properties:
+                  value:
+                    type: string
+                  currency:
+                    type: string
+        deliveryContanct:
+          type: object
+          properties:
+            fullName:
+              type: string
+            phone:
+              type: string
+        deliveryAddress:
+          type: object
+          properties:
+            name:
+              type: string
+    RestaurantMenu:
+      type: array
+      items:
+        type: object
+        properties:
+          itemId:
+            type: integer
+            format: int32
+          categories:
+            type: array
+            items:
+              type: string
+          available:
+            type: boolean
+          name:
+            type: string
+          thumbnailPhotoUrl:
+            type: string
+          fullsizePhotoUrl:
+            type: string
+          price:
+            type: object
+            properties:
+              value:
+                type: string
+              currency:
+                type: string
+          description:
+            type: string
+            
+    ShippingCost:
+      type: object
+      required:
+        - fromPlace
+        - toPlace
+        - cost
+      properties:
+        fromPlace:
+          type: string
+        toPlace:
+          type: string
+        cost:
+          type: object
+          required:
+            - value
+            - currency
+          properties:
+            value:
+              type: string # using float can distort cost due to floating point issues
+            currency:
+              type: string
+    Error:
+      type: object
+      required:
+        - error
+        - message
+        - diagnosis
+      properties:
+        error:
+          type: string
+        message:
+          type: string
+        diagnosis:
+          type: object
+          required:
+            - errorCode
+            - errorMsg
+          properties:
+            errorCode:
+              type: integer
+              format: int32
+            errorMsg:
+              type: string
+            args:
+              type: object 
